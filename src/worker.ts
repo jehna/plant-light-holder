@@ -4,7 +4,7 @@ import { OpenCascadeInstance } from "replicad-opencascadejs";
 import { setOC } from "replicad";
 import { expose } from "comlink";
 
-import { main } from "./plant-light-holder";
+import { main, ModelParams } from "./plant-light-holder";
 
 let loaded = false;
 const init = async () => {
@@ -25,14 +25,14 @@ const init = async () => {
 };
 const started = init();
 
-async function createBlob() {
+async function createBlob(params?: ModelParams) {
   await started;
-  return main().blobSTL();
+  return main(params).blobSTL();
 }
 
-async function createMesh() {
+async function createMesh(params?: ModelParams) {
   await started;
-  const model = main();
+  const model = main(params);
   return {
     faces: model.mesh(),
     edges: model.meshEdges(),

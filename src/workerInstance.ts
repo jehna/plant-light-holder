@@ -1,9 +1,10 @@
 import { wrap } from "comlink";
 import cadWorker from "./worker?worker";
+import { ModelParams } from "./plant-light-holder";
 
 interface WorkerAPI {
-  createBlob: () => Promise<Blob>;
-  createMesh: () => Promise<{
+  createBlob: (params?: ModelParams) => Promise<Blob>;
+  createMesh: (params?: ModelParams) => Promise<{
     faces: { vertices: number[]; triangles: number[]; normals: number[] };
     edges: {
       lines: number[];

@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import ThreeContext from "./ThreeContext";
 import ReplicadMesh from "./ReplicadMesh";
 import { cad } from "./workerInstance";
+import { defaultParams, ModelParams } from "./plant-light-holder";
 
 function DownloadIcon() {
   return (
@@ -32,15 +33,27 @@ export default function App() {
     };
   } | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [params, setParams] = useState<ModelParams>(defaultParams);
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
 
-  const fetchMesh = useCallback(() => {
-    cad.createMesh().then((m) => setMesh(m));
+  const fetchMesh = useCallback((p: ModelParams = paramsRef.current) => {
+    cad.createMesh(p).then((m) => setMesh(m));
   }, []);
+
+  const handleParamChange = useCallback(
+    (key: keyof ModelParams, value: number) => {
+      const newParams = { ...paramsRef.current, [key]: value };
+      setParams(newParams);
+      fetchMesh(newParams);
+    },
+    [fetchMesh]
+  );
 
   const handleDownload = useCallback(async () => {
     setDownloading(true);
     try {
-      const blob = await cad.createBlob();
+      const blob = await cad.createBlob(paramsRef.current);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -68,6 +81,26 @@ export default function App() {
     }
   }, [fetchMesh]);
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "8px",
+    border: "1px solid #555",
+    borderRadius: "4px",
+    backgroundColor: "#333",
+    color: "white",
+    fontSize: "14px",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    marginBottom: "4px",
+    fontSize: "12px",
+    color: "#aaa",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  };
+
   return (
     <main style={{ margin: 0, padding: 0, height: "100vh", width: "100vw" }}>
       {mesh ? (
@@ -75,6 +108,73 @@ export default function App() {
           <ThreeContext>
             <ReplicadMesh edges={mesh.edges} faces={mesh.faces} />
           </ThreeContext>
+          <div
+            style={{
+              position: "fixed",
+              top: 24,
+              left: 24,
+              backgroundColor: "rgba(40, 40, 40, 0.95)",
+              padding: "16px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              minWidth: "180px",
+            }}
+          >
+            <div>
+              <label style={labelStyle}>Neck Length (mm)</label>
+              <input
+                type="number"
+                value={params.neckLength}
+                onChange={(e) =>
+                  handleParamChange(
+                    "neckLength",
+                    parseFloat(e.target.value) || 0
+                  )
+                }
+                step="5"
+                min="50"
+                max="300"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Neck Thickness (mm)</label>
+              <input
+                type="number"
+                value={params.neckThickness}
+                onChange={(e) =>
+                  handleParamChange(
+                    "neckThickness",
+                    parseFloat(e.target.value) || 0
+                  )
+                }
+                step="0.5"
+                min="2"
+                max="20"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Base Width (mm)</label>
+              <input
+                type="number"
+                value={params.baseWidth}
+                onChange={(e) =>
+                  handleParamChange(
+                    "baseWidth",
+                    parseFloat(e.target.value) || 0
+                  )
+                }
+                step="1"
+                min="20"
+                max="100"
+                style={inputStyle}
+              />
+            </div>
+          </div>
           <button
             onClick={handleDownload}
             disabled={downloading}
@@ -115,6 +215,7 @@ export default function App() {
             justifyContent: "center",
             height: "100%",
             fontSize: "2em",
+            fontFamily: "system-ui, -apple-system, sans-serif",
           }}
         >
           Loading...

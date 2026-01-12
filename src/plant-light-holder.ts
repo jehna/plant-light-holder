@@ -8,16 +8,25 @@ import {
   Compound,
 } from "replicad";
 
+export interface ModelParams {
+  neckLength: number;
+  neckThickness: number;
+  baseWidth: number;
+}
+
+export const defaultParams: ModelParams = {
+  neckLength: 150,
+  neckThickness: 6.5,
+  baseWidth: 45,
+};
+
 const wallMountThickness = 8;
-const wallMountRadius = 45;
 const rodRadius = 12;
-const rodLength = 150;
 const tipRadius = 14;
 const transitionHeight = 10;
 const transitionThickness = 8;
 const hookHeight = 16;
 const uCurveHeight = 10;
-const hookThickness = 6.5;
 const holeRadius = 2.6;
 
 function uSketchAtZ(z: number, halfWidth: number) {
@@ -30,7 +39,9 @@ function uSketchAtZ(z: number, halfWidth: number) {
     .sketchOnPlane("XY", z) as Sketches;
 }
 
-export const main = () => {
+export const main = (params: ModelParams = defaultParams) => {
+  const { neckLength: rodLength, neckThickness: hookThickness, baseWidth: wallMountRadius } = params;
+
   const wallMount = uSketchAtZ(0, wallMountRadius).extrude(
     wallMountThickness
   ) as Solid;
