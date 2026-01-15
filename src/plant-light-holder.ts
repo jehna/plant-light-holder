@@ -15,7 +15,7 @@ export interface ModelParams {
 }
 
 export const defaultParams: ModelParams = {
-  neckLength: 150,
+  neckLength: 170,
   neckThickness: 6.5,
   baseWidth: 45,
 };
@@ -29,18 +29,23 @@ const hookHeight = 16;
 const uCurveHeight = 10;
 const holeRadius = 2.6;
 
-function uSketchAtZ(z: number, halfWidth: number) {
-  const depth = halfWidth;
-  return draw([-halfWidth, 0])
-    .vLine(depth)
-    .hBulgeArc(halfWidth * 2, -1)
-    .vLine(-depth)
+function uSketchAtZ(z: number, width: number) {
+  const halfWidth = width / 2;
+  return draw([-width, 0])
+    .vLine(halfWidth)
+    .hBulgeArc(width, -1)
+    .vLine(-halfWidth)
     .close()
+    .translate([halfWidth, 0])
     .sketchOnPlane("XY", z) as Sketches;
 }
 
 export const main = (params: ModelParams = defaultParams) => {
-  const { neckLength: rodLength, neckThickness: hookThickness, baseWidth: wallMountRadius } = params;
+  const {
+    neckLength: rodLength,
+    neckThickness: hookThickness,
+    baseWidth: wallMountRadius,
+  } = params;
 
   const wallMount = uSketchAtZ(0, wallMountRadius).extrude(
     wallMountThickness
@@ -64,13 +69,13 @@ export const main = (params: ModelParams = defaultParams) => {
   ) as Solid;
 
   const hole = drawCircle(holeRadius)
-    .sketchOnPlane("YZ", [hookThickness / 2, tipRadius])
+    .sketchOnPlane("YZ", [hookThickness / 2, tipRadius / 2])
     .extrude(-hookThickness) as Solid;
 
   const uProfile = (
     draw([0, transitionEnd])
       .vLine(uCurveHeight)
-      .hBulgeArc(tipRadius * 2, -1)
+      .hBulgeArc(tipRadius, -1)
       .vLine(-uCurveHeight)
       .close()
       .sketchOnPlane("YZ")
